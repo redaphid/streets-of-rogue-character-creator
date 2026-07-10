@@ -39,6 +39,12 @@ namespace CharacterCreator
                     Plugin.Log.LogInfo("Placing '" + def.name + "' into slot " + idx +
                         " (replacing '" + cs.slotAgentTypes[idx] + "')");
                     cs.slotAgentTypes[idx] = def.name;
+                    // The select screen sets each slot up once and caches it
+                    // (setSlotAgent[n]); if it already rendered this slot under its old
+                    // type, the name/portrait stay stale. Clear the cache so it re-renders
+                    // as our character.
+                    if (cs.setSlotAgent != null && idx < cs.setSlotAgent.Length)
+                        cs.setSlotAgent[idx] = false;
                 }
                 else
                 {
@@ -65,10 +71,17 @@ namespace CharacterCreator
             }
 
             // auto: append while there is room; once the built-in roster is full,
-            // displace the default duplicate (or the last slot as a last resort).
+            // displace the throwaway duplicate, then walk from the end for any slot not
+            // already taken by one of our own characters. Walking past our own slots is
+            // what keeps two "auto" characters from colliding on the same tail slot
+            // (which left slots showing the wrong name).
             if (cs.slotAgentTypes.Count < BuiltInSlots) return -1;
             int drop = cs.slotAgentTypes.IndexOf(DefaultDisplace);
-            return drop >= 0 ? drop : cs.slotAgentTypes.Count - 1;
+            if (drop >= 0) return drop;
+            for (int i = cs.slotAgentTypes.Count - 1; i >= 0; i--)
+                if (CharacterRegistry.ByAgentName(cs.slotAgentTypes[i]) == null)
+                    return i; // a vanilla slot we haven't claimed yet
+            return cs.slotAgentTypes.Count - 1;
         }
 
         // The select screen looks up portrait sprites by "<agentName>S"; alias each

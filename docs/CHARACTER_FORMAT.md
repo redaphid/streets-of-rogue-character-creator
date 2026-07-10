@@ -93,7 +93,14 @@ values, and good `baseBody` picks, are listed in
   "targetKills": 8
 }
 ```
-The objective is always "defeat `targetKills` foes with the special ability".
+The objective the mod currently **ships** is "defeat `targetKills` foes with the
+special ability" — `BigQuestPatches` tags the bolts your ability fires and counts
+the kills they cause. That's a limitation of the mod's code, **not** the game: the
+big-quest engine (`Quests.AddBigQuestPoints`) counts many event `pointsType`s —
+`ServeDrink`, `Research`, `ArrestGuilty`, `SellItem`, `DeliverPackage`,
+`Destruction`, `Cannibalize`, and more (these are the vanilla characters' quests).
+Exposing those is a small extension (add a `pointsType` to `BigQuestDef` and count
+that type instead of hard-coding `"Neutralize"`); ask if you want a non-kill quest.
 `{kills}` and `{target}` in the description are replaced with live numbers on the
 quest screen. Completing it grants a big in-run payoff (full heal, Giant + Fast,
 XP, 1000 money + two random weapons, and an instant ability recharge). Counting
