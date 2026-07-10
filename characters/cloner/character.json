@@ -1,7 +1,7 @@
 {
   "id": "cloner",
   "name": "Cloner",
-  "description": "A blazing-fast trickster who can copy anything. Cloner conjures up a duplicate weapon out of thin air - but they're fragile, so they have to keep moving and let their clones do the fighting.",
+  "description": "A blazing-fast trickster who can copy anything. Aim at furniture and Cloner duplicates it on the spot - build cover, block doors, make a mess - but they're fragile, so they have to keep moving.",
   "baseBody": "Vampire",
   "slot": "Athlete",
   "legsColor": [0, 200, 0],

@@ -24,6 +24,15 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
 
+  <!-- Per-character ability code lives with each character under
+       characters/<id>/src/. Compile it into the mod DLL; EffectRegistry auto-discovers
+       every IAbilityEffect at startup, so a new power is a class in its own folder. -->
+  <ItemGroup>
+    <Compile Include="../characters/*/src/**/*.cs">
+      <Link>Characters/%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
   <ItemGroup>
     <Reference Include="BepInEx">
       <HintPath>$(GameDir)/BepInEx/core/BepInEx.dll</HintPath>
@@ -51,10 +60,6 @@
     </Reference>
     <Reference Include="UnityEngine.Physics2DModule">
       <HintPath>$(ManagedDir)/UnityEngine.Physics2DModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>$(ManagedDir)/UnityEngine.InputLegacyModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.JSONSerializeModule">

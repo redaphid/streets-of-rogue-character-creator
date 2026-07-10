@@ -32,6 +32,10 @@ namespace CharacterCreator
                 return;
             }
 
+            // Discover every ability effect - the built-ins plus any per-character
+            // code compiled in from characters/<id>/src/ - so each "kind" has a handler.
+            EffectRegistry.RegisterFromAssembly(Assembly.GetExecutingAssembly());
+
             var harmony = new Harmony(GUID);
             harmony.PatchAll(typeof(RosterPatches));
             harmony.PatchAll(typeof(StatsPatches));

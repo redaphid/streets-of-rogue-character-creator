@@ -14,8 +14,6 @@ namespace CharacterCreator
         public static void ApplyStats(Agent __instance)
         {
             CharacterDef def = CharacterRegistry.ByAgentName(__instance.agentName);
-            Plugin.Log.LogInfo("ApplyStats ran: agentName='" + __instance.agentName +
-                "', defFound=" + (def != null) + ", isPlayer=" + __instance.isPlayer + ".");
             if (def == null) return;
             Agent a = __instance;
 
@@ -30,12 +28,7 @@ namespace CharacterCreator
             a.modVigilant = s.vigilant;
 
             if (def.HasAbility)
-            {
                 a.statusEffects.GiveSpecialAbility(def.abilityId);
-                Plugin.Log.LogInfo("Gave ability '" + def.abilityId + "' to agent '" + a.agentName +
-                    "' (isPlayer=" + a.isPlayer + ", levelType=" + GameController.gameController?.levelType +
-                    ", equipped=" + a.inventory?.equippedSpecialAbility?.invItemName + ").");
-            }
 
             if (def.startingItems != null)
                 foreach (StartItem item in def.startingItems)

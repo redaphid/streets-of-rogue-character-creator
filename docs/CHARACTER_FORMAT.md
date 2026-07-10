@@ -104,8 +104,41 @@ is server-authoritative, like the game's own Big Quests.
 ```
 scripts/validate-character.py characters/<id>
 ```
-Catches misspelled fields, unknown effect kinds, and bad bullet names — the
-mistakes `JsonUtility` would otherwise ignore silently at load time.
+Catches misspelled fields, unknown effect kinds, and bad bullet names before the
+game loads the character. (`character.json` is parsed with the game's bundled
+Newtonsoft.Json — not Unity's `JsonUtility`, which silently drops nested objects
+from a plugin assembly.)
+
+## Custom abilities (code)
+
+The built-in `kind`s cover a lot, but a genuinely new power can bring its own C#.
+Drop a class under `characters/<id>/src/` that implements `IAbilityEffect`:
+
+```csharp
+using CharacterCreator;
+using UnityEngine;
+
+namespace CharacterCreator.Characters.MyGuy   // unique per character
+{
+    public class ZapAllEffect : IAbilityEffect
+    {
+        public string Kind => "zapall";        // the "kind" this handles
+        public void Run(AbilityContext ctx)    // ctx: Agent, Gc, Fx (EffectDef), Def
+        {
+            ctx.Say(ctx.Fx.shout);
+            // ... use the game APIs (check decompiled/ for signatures) ...
+        }
+    }
+}
+```
+
+Then reference it from `character.json` like any other effect:
+`{ "kind": "zapall", "shout": "ZAP!" }`. The csproj compiles
+`characters/*/src/**/*.cs` into the mod DLL and `EffectRegistry` auto-discovers
+every `IAbilityEffect` at startup — no registration call, no edit to shared code.
+`cloner/src/CloneEffect.cs` is a worked example (the `clone` kind). Need a new
+`EffectDef` field for your parameters? Add a public field to `EffectDef` in
+`Model/CharacterDef.cs` (that part is shared). Rebuild with `scripts/dev-install.sh`.
 
 ## How the slot works
 

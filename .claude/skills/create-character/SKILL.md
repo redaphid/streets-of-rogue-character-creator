@@ -32,6 +32,12 @@ whatever they say — map it to real options yourself. Never dump the whole menu
    - "heals" → `heal`. "makes weapons / money" → `spawn`.
    Give the power a `name` and a short `description`. Ask what they want to
    **shout** when they use it (great for kids) → `shout` on the effects.
+   If the power doesn't fit any built-in `kind` (e.g. "copy the furniture I'm
+   near", "swap places with an enemy"), you can **write a custom effect in code**:
+   add a `characters/<id>/src/*.cs` class implementing `IAbilityEffect` and give it
+   a new `kind`. See "Custom abilities (code)" in `docs/CHARACTER_FORMAT.md` and the
+   worked example `characters/cloner/src/CloneEffect.cs`. Confirm any game API
+   against `decompiled/` first, then rebuild with `scripts/dev-install.sh`.
 4. **Looks** — "Who should they look like? A vampire? A robot? A gorilla?"
    (→ `baseBody` from the body list.) "Favorite color?" (→ `legsColor` /
    `bodyColor` as `[r,g,b]`).
