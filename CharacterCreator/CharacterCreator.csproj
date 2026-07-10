@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>CharacterCreator</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <DebugType>embedded</DebugType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+    <!-- Path to your Streets of Rogue install. Override with:
+         dotnet build -c Release -p:GameDir="C:\Path\To\Streets of Rogue"
+         The build links against the game's own DLLs, which only exist on a
+         machine that owns the game (they are copyrighted, never redistributed). -->
+    <GameDir Condition="'$(GameDir)' == ''">/home/redaphid/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Streets of Rogue</GameDir>
+
+    <!-- The game ships both a Windows and a Linux data folder; whichever one
+         has a Managed/ dir holds the DLLs we compile against. -->
+    <ManagedDir Condition="Exists('$(GameDir)/StreetsOfRogue_Data/Managed')">$(GameDir)/StreetsOfRogue_Data/Managed</ManagedDir>
+    <ManagedDir Condition="'$(ManagedDir)' == '' And Exists('$(GameDir)/StreetsOfRogueLinux_Data/Managed')">$(GameDir)/StreetsOfRogueLinux_Data/Managed</ManagedDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(GameDir)/BepInEx/core/BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(GameDir)/BepInEx/core/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(ManagedDir)/Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(ManagedDir)/UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ManagedDir)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(ManagedDir)/UnityEngine.ImageConversionModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>$(ManagedDir)/UnityEngine.JSONSerializeModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(ManagedDir)/UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
