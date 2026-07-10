@@ -1,0 +1,61 @@
+name: Release
+
+# This does NOT build the mod from source. CharacterCreator.csproj links directly
+# against the game's own DLLs (Assembly-CSharp.dll, UnityEngine*.dll), which are
+# copyrighted by the game's developer and only exist on a machine that already
+# owns and has installed the game — no CI runner can obtain them.
+#
+# So instead this packages the already-built install zips committed to dist/
+# (a maintainer runs scripts/package.sh locally before merging). verify-dist
+# below fails the release if a committed zip's DLL doesn't match dist/*.dll,
+# to catch a forgotten re-package.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  verify-dist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check zip DLLs match committed dist DLL
+        run: |
+          set -euo pipefail
+          # The installer copies CharacterCreator.dll from the zip root into
+          # BepInEx/plugins/ at install time, so the DLL lives at the zip root.
+          check() {
+            local zip="$1" dll="$2" name="$3"
+            if [ ! -f "$zip" ] || [ ! -f "$dll" ]; then
+              echo "skip: $name (missing $zip or $dll)"; return 0
+            fi
+            unzip -p "$zip" "$(basename "$dll")" > /tmp/extracted.dll
+            if ! cmp -s /tmp/extracted.dll "$dll"; then
+              echo "::error::$zip's $(basename "$dll") does not match $dll — run scripts/package.sh and commit dist/ before merging (see docs/BUILDING.md)"
+              exit 1
+            fi
+            echo "ok: $name"
+          }
+          check dist/SoR-CharacterCreator-Windows.zip dist/CharacterCreator.dll Windows
+          check dist/SoR-CharacterCreator-Linux.zip   dist/CharacterCreator.dll Linux
+
+  release:
+    needs: verify-dist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compute version tag
+        id: version
+        run: echo "tag=v$(date -u +%Y.%m.%d).${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            dist/SoR-CharacterCreator-Windows.zip
+            dist/SoR-CharacterCreator-Linux.zip
