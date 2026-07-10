@@ -26,7 +26,7 @@ characters/<id>/
 
 ## Examples
 
-- [`wizard/`](wizard/) — full-featured: 11 random Chaos Magic effects + a Big Quest.
-- [`ninja/`](ninja/) — minimal: three effects, a body tint, a small quest.
+- [`wizard/`](wizard/) — full-featured, data-only: 11 random Chaos Magic effects + a Big Quest.
+- [`cloner/`](cloner/) — code-backed: a custom `clone` effect and a custom Big Quest in `src/`.
 
 Give each character a unique `id` and `name`.

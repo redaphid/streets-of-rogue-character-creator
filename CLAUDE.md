@@ -32,8 +32,8 @@ game source lives at `/home/redaphid/Projects/streets-of-rogue-multiplayer/decom
   the csproj globs `characters/*/src/**/*.cs` into the DLL and `EffectRegistry`
   auto-discovers it at startup. So a novel power is a class in the character's own
   folder, never an edit to shared code. Example: `cloner/src/CloneEffect.cs` adds
-  the `clone` kind. Examples: `wizard/` (full, 11 random Chaos Magic effects),
-  `ninja/` (minimal), `cloner/` (custom `clone` effect in `src/`). Format
+  the `clone` kind. Examples: `wizard/` (full, 11 random Chaos Magic effects,
+  data-only), `cloner/` (custom `clone` effect + custom Big Quest in `src/`). Format
   reference: `docs/CHARACTER_FORMAT.md`.
 - `.claude/skills/create-character/` — the interview skill (kid → generated
   folder). `reference/effects.md` is the plain-language menu of valid bullets,
