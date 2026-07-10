@@ -50,6 +50,11 @@ extract_loader() {
   mkdir -p "$dst/BepInEx/plugins"
 }
 
+# `zip -r` adds to an existing archive rather than replacing it, so a removed
+# character would linger in the committed zip. Delete the targets first for a
+# deterministic build.
+rm -f "$DIST/SoR-CharacterCreator-Windows.zip" "$DIST/SoR-CharacterCreator-Linux.zip"
+
 echo "==> Packaging Windows zip"
 WIN="$WORK/win"; mkdir -p "$WIN"
 extract_loader "$PAYLOAD_WIN" "$WIN"
