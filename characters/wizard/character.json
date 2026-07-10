@@ -1,0 +1,45 @@
+{
+  "id": "wizard",
+  "name": "Wizard",
+  "description": "A frail scholar of the arcane. Their Chaos Magic casts a different random spell every time - fire, frost, lightning, shrinking, blinking... even the wizard doesn't know what comes out next.",
+  "baseBody": "Vampire",
+  "slot": "auto",
+  "legsColor": [94, 0, 148],
+  "stats": {
+    "strength": 1,
+    "endurance": 1,
+    "accuracy": 3,
+    "speed": 3,
+    "meleeSkill": 0,
+    "gunSkill": 1,
+    "toughness": 0,
+    "vigilant": 1
+  },
+  "startingItems": [
+    { "name": "Knife", "count": 1 }
+  ],
+  "ability": {
+    "name": "Chaos Magic",
+    "description": "Casts a completely random spell: fireball, frost bolt, lightning, shrink ray, spirit blast, sleep dart, a short-range blink... or a Wild Surge that does something unpredictable to YOU. Embrace the chaos.",
+    "icon": "assets/ability.png",
+    "cooldown": 4,
+    "effects": [
+      { "kind": "bolt", "bullet": "Fireball", "shout": "FIREBALL!" },
+      { "kind": "bolt", "bullet": "FreezeRay", "shout": "Frost bolt!" },
+      { "kind": "bolt", "bullet": "Taser", "shout": "Lightning!" },
+      { "kind": "bolt", "bullet": "Shrink", "shout": "Shrink ray!" },
+      { "kind": "bolt", "bullet": "GhostBlaster", "shout": "Spirit blast!" },
+      { "kind": "bolt", "bullet": "Tranquilizer", "shout": "Sleeeeep..." },
+      { "kind": "blink", "near": 3, "far": 8, "shout": "Blink!" },
+      { "kind": "buff", "status": "Giant", "seconds": 12, "shout": "WILD SURGE! I AM MIGHTY!" },
+      { "kind": "buff", "status": "Fast", "seconds": 10, "shout": "Wild surge! Gotta go fast!" },
+      { "kind": "buff", "status": "InvisibleLimited", "seconds": 8, "shout": "Wild surge! Where did I go?" },
+      { "kind": "buff", "status": "Shrunk", "seconds": 10, "shout": "wild surge! oh no, i'm tiny" }
+    ]
+  },
+  "bigQuest": {
+    "name": "Chaos Ascendant",
+    "description": "Slay {target} foes with Chaos Magic. Prove the arcane bends to your will.\nChaos kills: {kills}/{target}",
+    "targetKills": 8
+  }
+}
