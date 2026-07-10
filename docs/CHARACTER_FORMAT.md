@@ -89,22 +89,57 @@ values, and good `baseBody` picks, are listed in
 ```json
 "bigQuest": {
   "name": "Chaos Ascendant",
-  "description": "Slay {target} foes with your power.\nKills: {kills}/{target}",
+  "description": "Slay {target} foes with your power.\nKills: {progress}/{target}",
   "targetKills": 8
 }
 ```
-The objective the mod currently **ships** is "defeat `targetKills` foes with the
-special ability" — `BigQuestPatches` tags the bolts your ability fires and counts
-the kills they cause. That's a limitation of the mod's code, **not** the game: the
-big-quest engine (`Quests.AddBigQuestPoints`) counts many event `pointsType`s —
-`ServeDrink`, `Research`, `ArrestGuilty`, `SellItem`, `DeliverPackage`,
-`Destruction`, `Cannibalize`, and more (these are the vanilla characters' quests).
-Exposing those is a small extension (add a `pointsType` to `BigQuestDef` and count
-that type instead of hard-coding `"Neutralize"`); ask if you want a non-kill quest.
-`{kills}` and `{target}` in the description are replaced with live numbers on the
-quest screen. Completing it grants a big in-run payoff (full heal, Giant + Fast,
-XP, 1000 money + two random weapons, and an instant ability recharge). Counting
-is server-authoritative, like the game's own Big Quests.
+| field | default | meaning |
+|---|---|---|
+| `name` | — | quest title on the map/quest screen |
+| `description` | a generic line | supports `{progress}` (= `{kills}`), `{target}`, `{name}` tokens, filled live |
+| `kind` | `"kills"` | which `BigQuest` type tracks it (see below) |
+| `targetKills` | `8` | goal count for the default `kills` quest |
+| `target` | `0` | generic goal count; overrides `targetKills` when > 0 |
+
+The default `kind: "kills"` quest is "defeat `target` foes with your special
+ability" — `BigQuestPatches` tags the bolts the ability fires and counts the kills
+they cause. Completing any quest grants a big in-run payoff (full heal, Giant +
+Fast, XP, 1000 money + two random weapons, and an instant ability recharge).
+
+## Custom big quests (code)
+
+A quest can be **anything**, not just a kill count — including playstyles the base
+game has no equivalent of. Drop a `[BigQuestKind]`-tagged `BigQuest` subclass under
+`characters/<id>/src/` and point the JSON at it with `kind`:
+
+```csharp
+using CharacterCreator;
+
+namespace CharacterCreator.Characters.MyGuy
+{
+    [BigQuestKind("pacifist")]
+    public class PacifistQuest : BigQuest
+    {
+        private int floors;
+        public override int Progress => floors;
+        // Override the hooks you care about:
+        //   OnPoints(pointsType) - any game big-quest event (ServeDrink, ArrestGuilty,
+        //                          Destruction, SellItem, Research, Neutralize, ...)
+        //   OnKill(victim, viaAbility) - a kill, flagged if it came from your ability
+        //   OnAbility(effectKind)      - you used your special ability
+        //   OnEvent(name)              - a custom signal an effect emitted (see below)
+        public override void OnKill(Agent victim, bool viaAbility) { floors = 0; } // reset on any kill
+    }
+}
+```
+
+Effects can feed quests custom signals: call `ctx.QuestEvent("clone")` inside an
+`IAbilityEffect`, and a quest that overrides `OnEvent` counts it. `cloner/` is the
+worked example — `CloneEffect` emits `"clone"` on each successful copy and
+`CloneQuest` (`kind: "clonecount"`) tallies them into "Copy 12 objects", a quest
+with no kills at all. Set the goal with `target`; render progress with
+`{progress}/{target}`. Completion + payoff are server-authoritative, like the
+game's own Big Quests.
 
 ## Validate
 

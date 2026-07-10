@@ -35,6 +35,7 @@ namespace CharacterCreator.Characters.Cloner
                 Vector3 at = target.tr.position + new Vector3(0.64f, 0f, 0f);
                 gc.spawnerMain.spawnObjectReal(at, a, target.objectName);
                 gc.spawnerMain.SpawnNoise(a.tr.position, 1f, null, null, a);
+                ctx.QuestEvent("clone"); // count real clones toward Cloner's Big Quest
             }
             catch (System.Exception e) { Plugin.Log.LogWarning("Clone failed: " + e); }
         }

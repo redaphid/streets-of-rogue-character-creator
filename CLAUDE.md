@@ -17,13 +17,15 @@ game source lives at `/home/redaphid/Projects/streets-of-rogue-multiplayer/decom
 - `CharacterCreator/` — the BepInEx 5 plugin (net472, Harmony). `Plugin.cs` loads
   characters then applies four patch classes: `RosterPatches` (select slot,
   unlocks, names, body-sprite aliasing), `StatsPatches`, `AbilityPatches` (the
-  ability item + press/recharge plumbing), `BigQuestPatches` (kill attribution,
-  completion payoff, quest panel). `Model/CharacterDef.cs` is the JSON model +
-  a runtime `CharacterRegistry` the static patches key off by agent name.
-  `Abilities/` holds the effect engine: `IAbilityEffect` + `EffectRegistry`
+  ability item + press/recharge plumbing), `BigQuestPatches` (feeds game events to
+  the active quest, completion payoff, quest panel). `Model/CharacterDef.cs` is the
+  JSON model + a runtime `CharacterRegistry` the static patches key off by agent
+  name. `Abilities/` holds the effect engine: `IAbilityEffect` + `EffectRegistry`
   (`AbilityEffect.cs`) and the built-in kinds (`BuiltinEffects.cs`: bolt, blink,
-  buff, heal, spawn). `AbilityPatches.CastRandom` just resolves `fx.kind` through
-  the registry — there is no per-kind switch.
+  buff, heal, spawn). `Quests/` holds the quest engine: the `BigQuest` base +
+  `[BigQuestKind]` + `BigQuestRegistry` (`BigQuest.cs`) and the built-in `kills`
+  quest (`KillsQuest.cs`). Both are registered by assembly-scan at startup and
+  resolved by `kind` — there is no per-kind switch anywhere.
 - `characters/<id>/` — each custom character: `character.json` + `assets/ability.png`
   + `README.md`, and **optional `src/*.cs`** for a code-backed ability. A class in
   `src/` implementing `IAbilityEffect` registers a new `kind` just by existing:
@@ -80,9 +82,11 @@ and collides with `characters/wizard/`; move it aside when testing the wizard ex
   which drops every ability. Keep the model Newtonsoft-friendly: public fields, plain
   `[Serializable]` classes, one flat `EffectDef` with a `kind` discriminator (no
   polymorphic arrays). Field initializers are the defaults.
-- Custom ability logic goes in `characters/<id>/src/*.cs` as an `IAbilityEffect`
-  (unique namespace per character), **not** in the shared engine. Add a new effect
-  `kind` there; register nothing by hand — startup assembly-scan finds it.
+- Custom ability logic goes in `characters/<id>/src/*.cs` as an `IAbilityEffect`,
+  and custom mission logic as a `[BigQuestKind]` `BigQuest` subclass in the same
+  `src/` (unique namespace per character), **not** in the shared engine. Add a new
+  effect/quest `kind` there; register nothing by hand — startup assembly-scan finds
+  it. Effects can feed quests via `ctx.QuestEvent("name")` → `BigQuest.OnEvent`.
 - All ability/quest HUD and payoff touches are try/catch-guarded (headless and
   remote players have no `buffDisplay`).
 - Ship only original code, procedurally-generated icons, and open-source loader

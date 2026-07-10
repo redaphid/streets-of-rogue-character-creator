@@ -160,6 +160,7 @@ namespace CharacterCreator
             IAbilityEffect effect = EffectRegistry.Resolve(fx.kind);
             if (effect == null) { Plugin.Log.LogWarning("No effect for kind '" + fx.kind + "'."); return; }
             effect.Run(new AbilityContext { Agent = a, Gc = gc, Fx = fx, Def = def });
+            BigQuestPatches.NotifyAbility(a, fx.kind ?? "bolt");
         }
     }
 }

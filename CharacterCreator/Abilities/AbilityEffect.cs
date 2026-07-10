@@ -19,6 +19,14 @@ namespace CharacterCreator
         {
             if (!string.IsNullOrEmpty(line)) { try { Agent.Say(line); } catch { } }
         }
+
+        // Emit a named event the character's Big Quest can count (e.g. "clone" when a
+        // clone actually happens). Lets a quest track ability outcomes the base game
+        // never exposes. No-op if the character has no matching quest.
+        public void QuestEvent(string name)
+        {
+            try { BigQuestPatches.NotifyEvent(Agent, name); } catch { }
+        }
     }
 
     // One kind of ability outcome (bolt, buff, blink, heal, spawn, clone, ...). The

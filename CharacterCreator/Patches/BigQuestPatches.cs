@@ -4,11 +4,10 @@ using UnityEngine;
 
 namespace CharacterCreator
 {
-    // Each custom character gets a Big Quest: "slay N foes with your special
-    // ability." Kills are attributed by tagging the bolts the ability fires and
-    // counting when a tagged victim dies. Counting is server-authoritative, like
-    // vanilla big quests. Generalized from WizardMod's WizardBigQuest +
-    // WizardQuestPanel, keyed off the agent so it works for any character.
+    // Drives each custom character's Big Quest. The quest itself is a BigQuest instance
+    // (default "kills", or a per-character code quest under characters/<id>/src/); this
+    // class is the plumbing that feeds it game events, checks completion, grants the
+    // payoff, and paints the quest panel. Generalized from WizardMod's single quest.
     [HarmonyPatch]
     public static class BigQuestPatches
     {
@@ -18,46 +17,58 @@ namespace CharacterCreator
         // burn/freeze delays without crediting unrelated kills).
         private const float AttributionWindow = 6f;
 
-        // Per-run progress on the agent instance: survives floor transitions (same
-        // Agent streams across levels) and resets for a new run (new Agent).
-        private static readonly ConditionalWeakTable<Agent, Progress> progress =
-            new ConditionalWeakTable<Agent, Progress>();
+        // One BigQuest per player Agent; survives floor transitions (same Agent streams
+        // across levels) and resets for a new run (new Agent).
+        private static readonly ConditionalWeakTable<Agent, BigQuest> quests =
+            new ConditionalWeakTable<Agent, BigQuest>();
 
-        // Foes recently struck by a custom character's ability bolt, so the kill
-        // that follows can be attributed to the ability rather than a gun/knife.
+        // Foes recently struck by a custom character's ability bolt, so the kill that
+        // follows can be attributed to the ability rather than a gun/knife.
         private static readonly ConditionalWeakTable<Agent, HitTag> hits =
             new ConditionalWeakTable<Agent, HitTag>();
 
-        private class Progress { public int kills; public bool completed; }
         private class HitTag { public Agent owner; public float time; }
 
-        // Quest panel / NameDB description with live progress filled in.
-        public static string QuestDescription(CharacterDef def)
+        // The live quest for an agent, created on first need if the agent is one of our
+        // characters and has a Big Quest.
+        private static BigQuest GetQuest(Agent a)
         {
-            int kills = LocalKills(def);
-            string template = def.bigQuest.description;
-            if (string.IsNullOrEmpty(template))
-                template = "Slay {target} foes with your special ability.\nKills: {kills}/{target}";
-            return template
-                .Replace("{kills}", kills.ToString())
-                .Replace("{target}", def.bigQuest.targetKills.ToString());
+            if (a == null) return null;
+            if (quests.TryGetValue(a, out BigQuest existing)) return existing;
+            CharacterDef def = CharacterRegistry.ByAgentName(a.agentName);
+            if (def == null || !def.HasBigQuest) return null;
+            BigQuest q = BigQuestRegistry.Create(def, a);
+            if (q != null) quests.Add(a, q);
+            return q;
         }
 
-        private static int LocalKills(CharacterDef def)
+        private static void CheckComplete(Agent a, BigQuest q)
         {
-            Agent a = LocalAgent(def);
-            return a == null ? 0 : progress.GetOrCreateValue(a).kills;
-        }
-
-        private static Agent LocalAgent(CharacterDef def)
-        {
+            if (q == null || q.Completed || !q.IsComplete) return;
             GameController gc = GameController.gameController;
-            if (gc == null) return null;
-            if (gc.playerAgent != null && gc.playerAgent.agentName == def.name) return gc.playerAgent;
-            if (gc.playerAgentList != null)
-                foreach (Agent a in gc.playerAgentList)
-                    if (a != null && a.localPlayer && a.agentName == def.name) return a;
-            return null;
+            if (gc == null || !gc.serverPlayer) return; // completion + payoff are host-authoritative
+            q.Completed = true;
+            Complete(a, gc, q.Def);
+        }
+
+        // ---- event sources feeding the quest ----
+
+        // Called by AbilityPatches after a custom character's ability effect runs.
+        public static void NotifyAbility(Agent a, string effectKind)
+        {
+            BigQuest q = GetQuest(a);
+            if (q == null) return;
+            q.OnAbility(effectKind);
+            CheckComplete(a, q);
+        }
+
+        // Called by an effect via ctx.QuestEvent(name) - a custom signal a quest can count.
+        public static void NotifyEvent(Agent a, string name)
+        {
+            BigQuest q = GetQuest(a);
+            if (q == null) return;
+            q.OnEvent(name);
+            CheckComplete(a, q);
         }
 
         // Tag a foe struck by a custom character's ability bolt.
@@ -75,35 +86,34 @@ namespace CharacterCreator
             tag.time = Time.time;
         }
 
-        // The game fires AddBigQuestPoints(killer, victim, "Neutralize") once per
-        // kill on the server - the canonical per-kill hook.
+        // The game fires AddBigQuestPoints(actor, target, pointsType) on the server for
+        // every big-quest-relevant action - "Neutralize" per kill, plus "ServeDrink",
+        // "Research", "ArrestGuilty", "SellItem", "Destruction", etc. Forward them all.
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Quests), nameof(Quests.AddBigQuestPoints),
             new[] { typeof(Agent), typeof(Agent), typeof(InvItem), typeof(string) })]
-        public static void CountKill(Agent myAgent, Agent otherAgent, string pointsType)
+        public static void CountPoints(Agent myAgent, Agent otherAgent, string pointsType)
         {
             GameController gc = GameController.gameController;
-            if (myAgent == null || otherAgent == null || gc == null || !gc.serverPlayer) return;
-            if (pointsType != "Neutralize") return;
+            if (myAgent == null || gc == null || !gc.serverPlayer) return;
+            BigQuest q = GetQuest(myAgent);
+            if (q == null) return;
 
-            CharacterDef def = CharacterRegistry.ByBigQuest(myAgent.bigQuest);
-            if (def == null || !def.HasBigQuest) return;
-
-            HitTag tag;
-            if (!hits.TryGetValue(otherAgent, out tag)) return;
-            hits.Remove(otherAgent);
-            if (tag.owner != myAgent || Time.time - tag.time > AttributionWindow) return;
-
-            Progress pr = progress.GetOrCreateValue(myAgent);
-            if (pr.completed) return;
-            pr.kills++;
-            try { myAgent.Say("Kills: " + pr.kills + "/" + def.bigQuest.targetKills); } catch { }
-            if (pr.kills >= def.bigQuest.targetKills)
+            if (pointsType == "Neutralize" && otherAgent != null)
             {
-                pr.completed = true;
-                Complete(myAgent, gc, def);
+                bool viaAbility = false;
+                if (hits.TryGetValue(otherAgent, out HitTag tag))
+                {
+                    hits.Remove(otherAgent);
+                    viaAbility = tag.owner == myAgent && Time.time - tag.time <= AttributionWindow;
+                }
+                q.OnKill(otherAgent, viaAbility);
             }
+            q.OnPoints(pointsType);
+            CheckComplete(myAgent, q);
         }
+
+        // ---- completion + payoff ----
 
         private static void Complete(Agent w, GameController gc, CharacterDef def)
         {
@@ -166,6 +176,40 @@ namespace CharacterCreator
                 if (ability != null) ability.invItemCount = 0;
             }
             catch { }
+        }
+
+        // ---- quest panel ----
+
+        // Panel / NameDB text with live progress. Uses the live quest if the local
+        // player is running this character, else renders the template at zero progress.
+        public static string QuestDescription(CharacterDef def)
+        {
+            BigQuest q = LocalQuest(def);
+            if (q != null) return q.Describe();
+            string t = def.bigQuest?.description;
+            if (string.IsNullOrEmpty(t)) t = "{name}\n{progress}/{target}";
+            int target = def.bigQuest != null ? def.bigQuest.Goal : 0;
+            return t
+                .Replace("{kills}", "0").Replace("{progress}", "0")
+                .Replace("{target}", target.ToString())
+                .Replace("{name}", def.bigQuest?.name ?? "");
+        }
+
+        private static BigQuest LocalQuest(CharacterDef def)
+        {
+            Agent a = LocalAgent(def);
+            return a == null ? null : GetQuest(a);
+        }
+
+        private static Agent LocalAgent(CharacterDef def)
+        {
+            GameController gc = GameController.gameController;
+            if (gc == null) return null;
+            if (gc.playerAgent != null && gc.playerAgent.agentName == def.name) return gc.playerAgent;
+            if (gc.playerAgentList != null)
+                foreach (Agent a in gc.playerAgentList)
+                    if (a != null && a.localPlayer && a.agentName == def.name) return a;
+            return null;
         }
 
         // Restore the quest text on the map screen. QuestSlotBig.GetQuestInfo runs

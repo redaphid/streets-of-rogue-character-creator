@@ -41,8 +41,13 @@ whatever they say — map it to real options yourself. Never dump the whole menu
 4. **Looks** — "Who should they look like? A vampire? A robot? A gorilla?"
    (→ `baseBody` from the body list.) "Favorite color?" (→ `legsColor` /
    `bodyColor` as `[r,g,b]`).
-5. **Mission (optional)** — "Want a special mission? Like 'beat 8 bad guys with
-   your power'?" (→ `bigQuest` with `targetKills`). If they shrug, skip it.
+5. **Mission (optional)** — "Want a special mission?" The easy one is "beat N bad
+   guys with your power" (→ `bigQuest` with `targetKills`). But the mission can be
+   almost anything, including playstyles the base game lacks — "copy 12 objects",
+   "serve 10 drinks", "smash 15 things", a pacifist run. Non-kill missions need a
+   tiny `[BigQuestKind]` `BigQuest` subclass in `characters/<id>/src/` (see "Custom
+   big quests (code)" in `docs/CHARACTER_FORMAT.md`; `cloner/` is the example). If
+   they shrug, skip it.
 
 Confirm the whole thing back in one excited sentence before writing files.
 

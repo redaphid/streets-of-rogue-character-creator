@@ -116,9 +116,17 @@ def validate(path: Path):
     if bq is not None:
         if not bq.get("name"):
             err(where, 'bigQuest has no "name"')
-        check_int(f"{where} bigQuest", bq, "targetKills", 1, 100)
-        if ab is None:
-            warn(where, "bigQuest is set but the character has no ability to get kills with")
+        # Goal count: "target" (generic) overrides "targetKills". Validate whichever
+        # is present.
+        if "target" in bq:
+            check_int(f"{where} bigQuest", bq, "target", 1, 1000)
+        if "targetKills" in bq:
+            check_int(f"{where} bigQuest", bq, "targetKills", 1, 1000)
+        # The default "kills" quest needs an ability to score with; custom quest kinds
+        # (clonecount, serve drinks, etc.) are handled by code and don't require one.
+        kind = (bq.get("kind") or "kills").lower()
+        if kind == "kills" and ab is None:
+            warn(where, 'bigQuest kind "kills" but the character has no ability to get kills with')
 
 
 def targets(argv):

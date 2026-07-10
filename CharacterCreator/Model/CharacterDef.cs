@@ -93,8 +93,13 @@ namespace CharacterCreator
     public class BigQuestDef
     {
         public string name;                 // quest title, e.g. "Chaos Ascendant"
-        public string description;           // may contain {kills} and {target} placeholders
-        public int targetKills = 8;          // kills with the ability to complete
+        public string description;           // may contain {progress}/{kills} and {target}
+        public int targetKills = 8;          // goal count for the default "kills" quest
+        public string kind = "kills";        // which BigQuest type tracks it (registry key)
+        public int target = 0;               // generic goal count; 0 => fall back to targetKills
+
+        // The goal count a quest checks against - `target` if set, else `targetKills`.
+        public int Goal => target > 0 ? target : targetKills;
     }
 
     // Runtime registry of every loaded character, keyed for the Harmony patches

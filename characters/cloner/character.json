@@ -26,5 +26,11 @@
     "effects": [
       { "kind": "clone", "range": 3, "shout": "Copycat!" }
     ]
+  },
+  "bigQuest": {
+    "name": "Hall of Mirrors",
+    "description": "Copy {target} objects with Copycat.\nCopied: {progress}/{target}",
+    "kind": "clonecount",
+    "target": 12
   }
 }
