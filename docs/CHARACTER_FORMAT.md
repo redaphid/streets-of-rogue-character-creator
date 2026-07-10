@@ -77,8 +77,10 @@ Every effect has a `kind`; the other fields depend on it. Unused fields are igno
 | `buff` | `status`, `seconds`, `shout` | gives the caster a status effect for `seconds` |
 | `heal` | `healAmount`, `shout` | heals the caster (`0` = full heal) |
 | `spawn` | `item`, `count`, `shout` | gives `count` of `item` (empty `item` = a random weapon) |
+| `clone` | `range`, `shout` | duplicates the nearest world object (furniture: chair, wall, shelf…) within `range` tiles, spawning a copy one tile beside it |
 
-`shout` is an optional line the character says. Valid `bullet` and `status`
+`shout` is an optional line the character says. `clone` never causes kills, so
+don't pair it with a `targetKills` Big Quest. Valid `bullet` and `status`
 values, and good `baseBody` picks, are listed in
 [`.claude/skills/create-character/reference/effects.md`](../.claude/skills/create-character/reference/effects.md).
 

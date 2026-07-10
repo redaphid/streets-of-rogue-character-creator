@@ -48,8 +48,13 @@ namespace CharacterCreator
             try
             {
                 string text = File.ReadAllText(jsonPath, Encoding.UTF8);
-                CharacterDef def = JsonUtility.FromJson<CharacterDef>(text);
+                // Newtonsoft (bundled with the game) rather than Unity's JsonUtility:
+                // JsonUtility silently leaves nested [Serializable] fields (stats,
+                // ability, effects) at their defaults when the type lives in a plugin
+                // assembly, which dropped every ability. Newtonsoft populates them.
+                CharacterDef def = Newtonsoft.Json.JsonConvert.DeserializeObject<CharacterDef>(text);
                 if (def == null) { Plugin.Log.LogWarning("Empty/invalid JSON: " + jsonPath); return null; }
+                if (def.stats == null) def.stats = new StatBlock();
 
                 if (string.IsNullOrEmpty(def.name))
                 {

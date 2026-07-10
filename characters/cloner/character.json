@@ -1,0 +1,30 @@
+{
+  "id": "cloner",
+  "name": "Cloner",
+  "description": "A blazing-fast trickster who can copy anything. Cloner conjures up a duplicate weapon out of thin air - but they're fragile, so they have to keep moving and let their clones do the fighting.",
+  "baseBody": "Vampire",
+  "slot": "Athlete",
+  "legsColor": [0, 200, 0],
+  "stats": {
+    "strength": 1,
+    "endurance": 1,
+    "accuracy": 3,
+    "speed": 5,
+    "meleeSkill": 0,
+    "gunSkill": 1,
+    "toughness": 0,
+    "vigilant": 1
+  },
+  "startingItems": [
+    { "name": "Knife", "count": 1 }
+  ],
+  "ability": {
+    "name": "Copycat",
+    "description": "Aim at any piece of furniture - a chair, a wall, a vending machine - and Cloner copies it, dropping a fresh duplicate right beside it. Build cover, block doors, make a mess.",
+    "icon": "assets/ability.png",
+    "cooldown": 15,
+    "effects": [
+      { "kind": "clone", "range": 3, "shout": "Copycat!" }
+    ]
+  }
+}

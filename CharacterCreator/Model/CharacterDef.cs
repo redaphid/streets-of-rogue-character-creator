@@ -72,6 +72,7 @@ namespace CharacterCreator
     //   buff   -> gives the caster a status effect for `seconds`
     //   heal   -> heals the caster by healAmount (0 = full heal)
     //   spawn  -> gives the caster `count` of item `item` (or a random weapon if item empty)
+    //   clone  -> duplicates the furniture the player is aiming at (Hacker-style targeting)
     [Serializable]
     public class EffectDef
     {
@@ -84,6 +85,7 @@ namespace CharacterCreator
         public float near = 3;     // blink min distance
         public float far = 8;      // blink max distance
         public int healAmount = 0; // heal: 0 => full
+        public float range = 6;    // clone: how far the player can reach to target furniture
         public string shout;       // optional line the character says
     }
 

@@ -57,6 +57,14 @@ walls), `Accurate` (perfect aim), `Bloodlust`, `AlwaysCrit`, `BigMelee`,
 { "kind": "spawn", "item": "Money", "count": 100, "shout": "Cha-ching!" }
 ```
 
+### `clone` — copy the furniture you're aiming at
+```json
+{ "kind": "clone", "range": 6, "shout": "Copycat!" }
+```
+Aim at any world object (a chair, a wall, a vending machine) within `range` tiles
+and it drops a fresh duplicate right beside it. Great for building cover or
+blocking doors. Doesn't cause kills, so don't pair it with a `targetKills` Big Quest.
+
 ## Stats (`stats`, each 1–5, 2 is average)
 
 `strength` (melee power/health), `endurance` (max health), `accuracy` (aim),

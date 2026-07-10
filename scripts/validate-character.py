@@ -28,7 +28,7 @@ KNOWN_STATUS = {
     "Acid", "Nicotine", "WerewolfEffect", "AlwaysCrit", "BigMelee", "BigBullets",
 }
 
-KINDS = {"bolt", "blink", "buff", "heal", "spawn"}
+KINDS = {"bolt", "blink", "buff", "heal", "spawn", "clone"}
 
 errors = []
 warnings = []
