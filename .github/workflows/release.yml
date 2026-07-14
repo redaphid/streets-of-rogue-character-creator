@@ -59,3 +59,4 @@ jobs:
           files: |
             dist/SoR-CharacterCreator-Windows.zip
             dist/SoR-CharacterCreator-Linux.zip
+            installer/Update-SoR-Mods.bat

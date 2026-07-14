@@ -43,6 +43,22 @@ Full menu of abilities/bodies/colors: [`docs/CHARACTER_FORMAT.md`](docs/CHARACTE
 
 Copy either folder, rename it, and edit `character.json` to make your own.
 
+## The one-file updater (easiest way to share with family)
+
+Send people **one file** they keep on their Desktop:
+[`Update-SoR-Mods.bat`](https://github.com/redaphid/streets-of-rogue-character-creator/releases/latest/download/Update-SoR-Mods.bat).
+Double-clicking it always downloads and installs the **latest** release of every
+mod (EightPlayers co-op + Character Creator + all characters) into their Steam
+game — and re-running it is how they update. No zips, no versions, no re-sending
+files. The bat just fetches and runs
+[`installer/update-sor-mods.ps1`](installer/update-sor-mods.ps1) from this
+repo's `main`, so improving the install logic here reaches everyone
+automatically.
+
+Windows will show a "protect your PC" SmartScreen warning the first time —
+click **More info → Run anyway** (the script is plain text in this repo;
+nothing is installed outside the game folder).
+
 ## Installing (details)
 
 The installer bundles the [BepInEx](https://github.com/BepInEx/BepInEx) mod
