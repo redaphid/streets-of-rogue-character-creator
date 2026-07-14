@@ -1,5 +1,6 @@
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CharacterCreator
 {
@@ -98,6 +99,35 @@ namespace CharacterCreator
                     gr.bodyDic[dst] = gr.bodyDic[src];
                 if (gr.bodyGDic != null && gr.bodyGDic.ContainsKey(src) && !gr.bodyGDic.ContainsKey(dst))
                     gr.bodyGDic[dst] = gr.bodyGDic[src];
+            }
+        }
+
+        // The aliased portrait is the base body's raw sprite, so on the select
+        // screen a custom character was indistinguishable from its base. The game
+        // already solves this for its own in-game "Custom" characters by setting
+        // the Body Image's color (SetupSlotAgent tints Custom, then resets every
+        // other agent to Color.white) - so after it runs, re-tint our slots the
+        // same way with the character's configured color.
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(CharacterSelect), nameof(CharacterSelect.SetupSlotAgent))]
+        public static void TintPortrait(CharacterSelect __instance, int n, string mySlotAgentType)
+        {
+            CharacterDef def = CharacterRegistry.ByAgentName(mySlotAgentType);
+            if (def == null) return;
+            int[] rgb = (def.bodyColor != null && def.bodyColor.Length >= 3) ? def.bodyColor
+                      : (def.legsColor != null && def.legsColor.Length >= 3) ? def.legsColor
+                      : null;
+            if (rgb == null) return;
+            try
+            {
+                __instance.slotAgent[n].transform.Find("Body").GetComponent<Image>().color =
+                    new Color32((byte)Mathf.Clamp(rgb[0], 0, 255),
+                                (byte)Mathf.Clamp(rgb[1], 0, 255),
+                                (byte)Mathf.Clamp(rgb[2], 0, 255), 255);
+            }
+            catch (System.Exception e)
+            {
+                Plugin.Log.LogWarning("Portrait tint failed for '" + def.name + "': " + e.Message);
             }
         }
 

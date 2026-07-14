@@ -4,13 +4,16 @@ using System.Collections.Generic;
 namespace CharacterCreator
 {
     // The data model for a custom character, deserialized from a folder's
-    // character.json by Unity's JsonUtility. JsonUtility rules shape this design:
+    // character.json with the game's bundled Newtonsoft.Json (NOT Unity's
+    // JsonUtility - it silently leaves nested objects from plugin assemblies
+    // null; see CharacterLoader). The flat shape is deliberate and kept simple:
     //  - every field is a public field (no properties),
     //  - nested types are [Serializable] classes with public fields,
     //  - there are no dictionaries or polymorphic arrays (EffectDef is one flat
     //    class with a "kind" discriminator instead of a subclass per effect).
-    // Field initializers double as defaults: JsonUtility constructs the object
-    // (running these initializers) and only overwrites the keys present in JSON.
+    // Field initializers double as defaults: the deserializer constructs the
+    // object (running these initializers) and only overwrites keys present in
+    // the JSON; unknown JSON keys are ignored.
     [Serializable]
     public class CharacterDef
     {

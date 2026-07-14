@@ -18,6 +18,21 @@ namespace CharacterCreator
 
         // ---- item definition ----------------------------------------------------
 
+        // Inject every ability icon as soon as the item dictionary is built,
+        // instead of waiting for the first ability item's SetupDetails (i.e. the
+        // first spawn of that character). Anything that reads gr.itemDic before
+        // then - HUD warm-up, ability previews - would get a silent blank icon
+        // (LoadItemSprite swallows the missing key).
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(GameResources), nameof(GameResources.SetupDics))]
+        public static void InjectAllSprites(GameResources __instance)
+        {
+            if (__instance.itemDic == null) return;
+            foreach (CharacterDef def in CharacterRegistry.All)
+                if (def.HasAbility)
+                    InjectSprite(def, __instance);
+        }
+
         [HarmonyPostfix]
         [HarmonyPatch(typeof(InvItem), nameof(InvItem.SetupDetails))]
         public static void SetupAbilityItem(InvItem __instance)
@@ -25,18 +40,20 @@ namespace CharacterCreator
             CharacterDef def = CharacterRegistry.ByAbilityId(__instance.invItemName);
             if (def == null) return;
 
-            InjectSprite(def);
+            InjectSprite(def, null); // safety net if SetupDics never ran
             __instance.LoadItemSprite(def.abilityId);
             __instance.stackable = true;
             __instance.initCount = 0;         // starts ready
             __instance.lowCountThreshold = 100;
         }
 
-        private static void InjectSprite(CharacterDef def)
+        private static void InjectSprite(CharacterDef def, GameResources gr)
         {
-            if (spritesInjected.Contains(def.abilityId)) return;
-            GameResources gr = GameController.gameController?.gameResources;
+            if (gr == null) gr = GameController.gameController?.gameResources;
             if (gr?.itemDic == null) return;
+            // The HashSet only skips re-reading the PNG; still verify the key is
+            // present, since SetupDics can rebuild the dictionaries.
+            if (spritesInjected.Contains(def.abilityId) && gr.itemDic.ContainsKey(def.abilityId)) return;
 
             if (!gr.itemDic.ContainsKey(def.abilityId))
             {

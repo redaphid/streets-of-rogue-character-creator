@@ -11,9 +11,10 @@ characters/<id>/
 ```
 
 The mod loads every `characters/*/character.json` it finds installed under
-`BepInEx/plugins/Characters/`. The definition is parsed with Unity's
-`JsonUtility`, so: only the fields below are read, unknown fields are ignored,
-and any missing field falls back to the default shown.
+`BepInEx/plugins/Characters/`. The definition is parsed with the game's bundled
+Newtonsoft.Json (not Unity's `JsonUtility`, which silently drops nested
+objects): only the fields below are read, unknown fields are ignored, and any
+missing field falls back to the default shown.
 
 ## Top-level fields
 
