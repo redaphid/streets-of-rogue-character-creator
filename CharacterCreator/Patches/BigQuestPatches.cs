@@ -72,7 +72,17 @@ namespace CharacterCreator
         }
 
         // Tag a foe struck by a custom character's ability bolt.
-        [HarmonyPostfix]
+        //
+        // This MUST run as a prefix: BulletHitbox.HitAftermath applies the bullet's
+        // damage inside its own body (agent.Damage(...)), so a bolt that kills on
+        // impact triggers the victim's death - and the game's
+        // AddBigQuestPoints(killer, victim, "Neutralize") call that CountPoints below
+        // consumes - *before* HitAftermath returns. A postfix here would record the
+        // hit too late, after that Neutralize had already been scored with no tag, so
+        // impact kills (Taser, direct GhostBlaster, the finishing bolt on a weakened
+        // foe, ...) never counted and the quest crept along on delayed burn/freeze
+        // kills alone - never reaching its target. Tagging in the prefix credits both.
+        [HarmonyPrefix]
         [HarmonyPatch(typeof(BulletHitbox), nameof(BulletHitbox.HitAftermath))]
         public static void TagVictim(BulletHitbox __instance, Agent agent)
         {
