@@ -71,5 +71,5 @@ decompiled game source:
   quest-panel text.
 
 The techniques are generalized from the single-character WizardMod
-(`/home/redaphid/Projects/streets-of-rogue-multiplayer/WizardMod`) — see its
+(`/home/redaphid/Projects/streets-of-rogue/multiplayer/WizardMod`) — see its
 `docs/WIZARD.md` for the original per-patch rationale.

@@ -14,8 +14,8 @@ set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 DOTNET="${DOTNET:-$HOME/.dotnet/dotnet}"
-PAYLOAD_WIN="${PAYLOAD_WIN:-$HOME/Projects/streets-of-rogue-multiplayer/dist/SoR-WizardMod-Windows.zip}"
-PAYLOAD_LIN="${PAYLOAD_LIN:-$HOME/Projects/streets-of-rogue-multiplayer/dist/SoR-WizardMod-Linux.zip}"
+PAYLOAD_WIN="${PAYLOAD_WIN:-$HOME/Projects/streets-of-rogue/multiplayer/dist/SoR-WizardMod-Windows.zip}"
+PAYLOAD_LIN="${PAYLOAD_LIN:-$HOME/Projects/streets-of-rogue/multiplayer/dist/SoR-WizardMod-Linux.zip}"
 
 DIST="$REPO/dist"
 WORK="$(mktemp -d)"

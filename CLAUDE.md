@@ -7,9 +7,9 @@ special ability, Big Quest). Aimed at kids: the intended flow is *talk to Claude
 → generate a character folder → run the installer on Windows.
 
 Approach and Harmony-patch techniques are generalized from the single-character
-**WizardMod** at `/home/redaphid/Projects/streets-of-rogue-multiplayer/WizardMod`
+**WizardMod** at `/home/redaphid/Projects/streets-of-rogue/multiplayer/WizardMod`
 (see its `docs/WIZARD.md` for the original per-patch rationale). The decompiled
-game source lives at `/home/redaphid/Projects/streets-of-rogue-multiplayer/decompiled`
+game source lives at `/home/redaphid/Projects/streets-of-rogue/multiplayer/decompiled`
 — read it to confirm any game API before using it.
 
 ## Layout
