@@ -24,6 +24,8 @@ namespace CharacterCreator
         public string slot = "auto";       // "auto" | an agent name to replace | a slot number
         public int[] legsColor;            // optional [r,g,b] tint on the "legs"/robe slot
         public int[] bodyColor;            // optional [r,g,b] tint on the body/shirt slot
+        public string headPiece;           // optional armor-head item worn on the head (e.g. a custom hat),
+                                           // rendered per-direction by the game for free; "" = none
         public StatBlock stats = new StatBlock();
         public StartItem[] startingItems;
         public AbilityDef ability;

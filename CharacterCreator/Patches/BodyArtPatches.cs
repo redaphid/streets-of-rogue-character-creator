@@ -30,7 +30,33 @@ namespace CharacterCreator
         public static void InjectAll(GameResources __instance)
         {
             foreach (CharacterDef def in CharacterRegistry.All)
+            {
                 Inject(def);
+                InjectHeadPiece(def);
+            }
+        }
+
+        // A custom hat: the directional sprites live in assets/headpiece/<HatName><Dir>.png
+        // (e.g. WizardHatS, WizardHatSE, ...). Injected into the tk2d HeadPieces
+        // collection so the game's head/hat layer renders "<HatName>"+playerDir on the
+        // head every frame (StatsPatches sets it as the character's defaultArmorHead).
+        public static void InjectHeadPiece(CharacterDef def)
+        {
+            if (string.IsNullOrEmpty(def.headPiece)) return;
+            string dir = Path.Combine(def.dir, "assets", "headpiece");
+            if (!Directory.Exists(dir)) return;
+            foreach (string path in Directory.GetFiles(dir, def.headPiece + "*.png"))
+            {
+                string key = Path.GetFileNameWithoutExtension(path); // "WizardHatS" etc.
+                if (injected.Contains("hp:" + key)) { CustomSprite.Redefine(key); continue; }
+                try
+                {
+                    CustomSprite.Create(key, SpriteScope.HeadPieces, File.ReadAllBytes(path));
+                    injected.Add("hp:" + key);
+                    Plugin.Log.LogInfo("Injected head-piece sprite '" + key + "' for '" + def.name + "'.");
+                }
+                catch (System.Exception e) { Plugin.Log.LogWarning("head-piece '" + key + "' failed: " + e.Message); }
+            }
         }
 
         public static void Inject(CharacterDef def)
