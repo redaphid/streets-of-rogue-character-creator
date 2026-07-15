@@ -64,9 +64,34 @@ Create the folder `characters/<id>/` at the repo root with:
   scripts/make-icon.py characters/<id>/assets/ability.png -l <FirstLetter> -c "<#hexcolor>"
   ```
   Use their favorite color. (If they'd rather draw their own, tell them to drop
-  a 64×64 PNG there instead.)
+  a 64×64 PNG there instead.) This basic icon ALWAYS works and is the baseline.
 - `characters/<id>/README.md` — one short paragraph describing the character, in
   the kid's own framing, like `characters/wizard/README.md`.
+
+### Optional: "Want custom AI art?" (fancier body + icon)
+
+After the basics work, offer one friendly extra: *"Want me to draw your character
+its own body and a fancy power icon?"* If yes — and ONLY if the ComfyUI art
+server is up (`curl -s localhost:8188/system_stats` returns something) — generate
+real sprites through the same tk2d pipeline the Wizard uses:
+
+```
+# a 44x36 character-select portrait (their own body, shown on the pick screen)
+scripts/generate-assets.py body characters/<id>/assets/body/<Name>S.png \
+    "<one-line look: e.g. frail purple-robed wizard with a big white beard>"
+# (optional) a fancier 64x64 ability icon, replacing the basic one
+scripts/generate-assets.py icon characters/<id>/assets/ability.png \
+    "<one-line power: e.g. a glowing green poison flask>"
+```
+
+The mod injects `assets/body/<Name>S.png` as the character's select-screen
+portrait through its RogueLibs-borrowed tk2d Bodies path (see
+`CharacterCreator/Sprites/CustomSprite.cs`). In-world the character still wears
+the chosen `baseBody` rig tinted to its colours — a full custom walk animation is
+out of scope, so pick a `baseBody` whose shape suits the character. If the art
+server is down or the result looks wrong, just skip it: the plain
+`character.json` + basic icon is the always-works baseline and nothing else
+changes. Keep this step optional and light — never block a kid's character on art.
 
 ## 3. Check it
 
