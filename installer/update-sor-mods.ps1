@@ -16,13 +16,27 @@
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
-# Every mod to install: the /releases/latest/download/ URLs always point at the
-# newest published build, so this list only changes when a NEW mod is added.
+# Every mod to install. Each URL is a /releases/latest/download/ link, so it
+# always points at the newest build and this list changes only when a mod is
+# added. Each zip is a game-folder overlay (installer/MANIFEST.md): its BepInEx\
+# tree — loader, patchers\, plugins\<Mod>\ with DLLs and assets — plus an
+# optional root Characters\ folder merge straight into the game folder, so a mod
+# that ships a RogueLibs patcher or an assets subdir needs no handling here.
+#
+# Optional = $true skips a mod that has no published release yet, so it can be
+# listed before its release CI exists without breaking the kids' updater. Remove
+# the flag once the mod is releasing.
 $Mods = @(
     @{ Name = "EightPlayers (play together online)";
        Url  = "https://github.com/redaphid/streets-of-rogue-multiplayer/releases/latest/download/SoR-EightPlayers-Windows.zip" },
-    @{ Name = "Character Creator (custom characters)";
-       Url  = "https://github.com/redaphid/streets-of-rogue-character-creator/releases/latest/download/SoR-CharacterCreator-Windows.zip" }
+    @{ Name = "Character Creator (custom characters, incl. the Wizard)";
+       Url  = "https://github.com/redaphid/streets-of-rogue-character-creator/releases/latest/download/SoR-CharacterCreator-Windows.zip" },
+    @{ Name = "Swamp Content (bog items + creatures)"; Optional = $true;
+       Url  = "https://github.com/streets-of-rogue-montzters/swamp-content/releases/latest/download/SoR-SwampContent-Windows.zip" },
+    @{ Name = "Swamp Biome (spooky swamp level)"; Optional = $true;
+       Url  = "https://github.com/streets-of-rogue-montzters/swamp-biome/releases/latest/download/SoR-SwampBiome-Windows.zip" },
+    @{ Name = "Wizard (RogueLibs Chaos Magic + Wizard mutator)"; Optional = $true;
+       Url  = "https://github.com/redaphid/wizard-content/releases/latest/download/SoR-WizardContent-Windows.zip" }
 )
 
 function Write-Head($t) { Write-Host ""; Write-Host "== $t ==" -ForegroundColor Cyan }
@@ -137,7 +151,20 @@ try {
         Write-Head $mod.Name
         $zip = Join-Path $tmp (Split-Path $mod.Url -Leaf)
         Write-Host "  downloading..."
-        Invoke-WebRequest -Uri $mod.Url -OutFile $zip -UseBasicParsing
+        try {
+            Invoke-WebRequest -Uri $mod.Url -OutFile $zip -UseBasicParsing
+        }
+        catch [System.Net.WebException] {
+            $status = [int]$_.Exception.Response.StatusCode
+            # 404 = this mod has no published release yet. An Optional mod is
+            # meant to be listed before its release CI exists, so skip it; any
+            # other mod (or any other error) is a real failure and must be loud.
+            if ($mod.Optional -and $status -eq 404) {
+                Write-Host "  not released yet - skipping (it'll install itself once it's ready)." -ForegroundColor DarkGray
+                continue
+            }
+            throw
+        }
         $extracted = Join-Path $tmp ([IO.Path]::GetFileNameWithoutExtension($zip))
         Expand-Archive -Path $zip -DestinationPath $extracted -Force
         Install-Payload $extracted $game

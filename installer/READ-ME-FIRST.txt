@@ -1,0 +1,54 @@
+Streets of Rogue - Family Mods
+==============================
+
+This gets you ALL our Streets of Rogue mods and keeps them up to date:
+  - Play together online (up to 8 players)
+  - Custom characters, including the Wizard
+  - The Swamp (spooky swamp level + bog stuff), when it's ready
+
+You need to own Streets of Rogue on Steam and have it installed. That's it.
+
+
+GET THE MODS (Windows)
+----------------------
+1. Save the file  Update-SoR-Mods.bat  somewhere easy, like your Desktop.
+2. Make sure Streets of Rogue is CLOSED.
+3. Double-click  Update-SoR-Mods.bat
+4. A black window opens and does everything by itself - it finds your game,
+   downloads the newest mods, and installs them. Wait for "All done!".
+5. Start Streets of Rogue from Steam like normal. The mods are on.
+
+That same file is also how you UPDATE. Any time you want the newest stuff
+(or a friend says there's a new version), just double-click it again. It only
+ever gets newer - it never breaks what you have.
+
+
+IF WINDOWS TRIES TO STOP YOU
+----------------------------
+Windows may show a blue "Windows protected your PC" box because the file is new.
+Click  More info  ->  Run anyway. It's safe - it only copies mod files into
+your game folder.
+
+If it says it can't find your game, it will ask you to paste the folder. In
+Steam: right-click Streets of Rogue -> Manage -> Browse local files, then copy
+the folder path from the top of the window and paste it in.
+
+
+PLAY TOGETHER
+-------------
+Everyone who wants to play together runs  Update-SoR-Mods.bat  first (so you all
+have the same mods). Then in the game, everyone presses  F9  and types the SAME
+room code.
+
+
+DID IT WORK?
+------------
+Your custom characters (like the Wizard) show up on the character-select screen,
+already unlocked. If something seems off, ask the grown-up who set this up to
+check  BepInEx\LogOutput.log  in the game folder.
+
+
+TURN IT OFF
+-----------
+Delete the  BepInEx  folder and  winhttp.dll  from the game folder to remove all
+mods. Steam will still run the plain game.
