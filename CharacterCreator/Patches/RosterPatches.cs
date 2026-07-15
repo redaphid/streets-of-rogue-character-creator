@@ -93,6 +93,9 @@ namespace CharacterCreator
             if (gr == null) return;
             foreach (CharacterDef def in CharacterRegistry.All)
             {
+                // A character with its own body art injects its real "<Name>S" sprite
+                // (BodyArtPatches); don't overwrite it with the baseBody alias.
+                if (BodyArtPatches.HasCustomBody(def)) continue;
                 string src = def.baseBody + "S";
                 string dst = def.name + "S";
                 if (gr.bodyDic != null && gr.bodyDic.ContainsKey(src) && !gr.bodyDic.ContainsKey(dst))
@@ -114,6 +117,9 @@ namespace CharacterCreator
         {
             CharacterDef def = CharacterRegistry.ByAgentName(mySlotAgentType);
             if (def == null) return;
+            // Custom body art already carries its own colours; a portrait tint would
+            // recolour it (e.g. wash the wizard purple), so leave it untinted.
+            if (BodyArtPatches.HasCustomBody(def)) return;
             int[] rgb = (def.bodyColor != null && def.bodyColor.Length >= 3) ? def.bodyColor
                       : (def.legsColor != null && def.legsColor.Length >= 3) ? def.legsColor
                       : null;
@@ -204,11 +210,17 @@ namespace CharacterCreator
             CharacterDef def = CharacterRegistry.ByAgentName(agent.agentName);
             if (def == null) return;
 
+            // With custom body art we keep the character's own front sprite ("<Name>S")
+            // so the in-world front view is the real wizard, and only redirect the rest
+            // of the walk rig to the baseBody (the walk frames aren't custom-drawn).
+            bool custom = BodyArtPatches.HasCustomBody(def);
+            string keep = BodyArtPatches.PortraitKey(def);
             for (int i = 0; i < __instance.agentBodyStrings.Count; i++)
             {
                 string s = __instance.agentBodyStrings[i];
-                if (s.StartsWith(def.name))
-                    __instance.agentBodyStrings[i] = def.baseBody + s.Substring(def.name.Length);
+                if (!s.StartsWith(def.name)) continue;
+                if (custom && s == keep) continue; // keep the custom "<Name>S"
+                __instance.agentBodyStrings[i] = def.baseBody + s.Substring(def.name.Length);
             }
         }
     }

@@ -16,6 +16,35 @@ namespace CharacterCreator
     {
         private static readonly HashSet<string> spritesInjected = new HashSet<string>();
 
+        // Grant a custom special ability AND build its HUD slot. The game only
+        // instantiates the special-ability HUD slot for a player whose
+        // equippedSpecialAbility is already set MID-SetupAgentStats (Agent.cs:5781),
+        // and GiveSpecialAbility's own switch only wires the slot/indicator for
+        // vanilla ability names. Our ability is granted in a SetupAgentStats postfix
+        // (too late) under a name the switch doesn't know - so without this the
+        // ability works but its icon never appears (the slot is never created and the
+        // HUD shows the fist/weapon instead). Creating the slot here makes the custom
+        // icon render in the special-ability slot. No-op on the home base, where
+        // GiveSpecialAbility itself is a no-op.
+        public static void EquipAbility(Agent a, string abilityId)
+        {
+            if (a == null || string.IsNullOrEmpty(abilityId)) return;
+            a.statusEffects.GiveSpecialAbility(abilityId);
+            if (a.inventory != null && a.inventory.equippedSpecialAbility == null) return; // home base / not equipped
+            try
+            {
+                if (a.isPlayer > 0 && a.localPlayer && a.inventory.buffDisplay != null)
+                {
+                    a.inventory.buffDisplay.AddSpecialAbility(); // guarded internally: only builds if missing
+                    a.statusEffects.SpecialAbilityInterfaceCheck();
+                }
+            }
+            catch (System.Exception e)
+            {
+                Plugin.Log.LogWarning("EquipAbility HUD setup failed for '" + abilityId + "': " + e.Message);
+            }
+        }
+
         // ---- item definition ----------------------------------------------------
 
         // Inject every ability icon as soon as the item dictionary is built,
@@ -105,7 +134,7 @@ namespace CharacterCreator
                 def = byName;
                 Plugin.Log.LogWarning("Ability not equipped for '" + agent.agentName +
                     "'; granting '" + def.abilityId + "' on press.");
-                try { agent.statusEffects.GiveSpecialAbility(def.abilityId); }
+                try { EquipAbility(agent, def.abilityId); }
                 catch (System.Exception e) { Plugin.Log.LogWarning("Late grant failed: " + e); }
             }
 

@@ -44,6 +44,7 @@ namespace CharacterCreator
             harmony.PatchAll(typeof(AbilityPatches));
             harmony.PatchAll(typeof(BigQuestPatches));
             harmony.PatchAll(typeof(SpritePatches));
+            harmony.PatchAll(typeof(BodyArtPatches));
 
             TestHarness.Init();
 

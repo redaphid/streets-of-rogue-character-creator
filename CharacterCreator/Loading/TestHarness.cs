@@ -55,7 +55,7 @@ namespace CharacterCreator
                 if (def != null && def.HasAbility && string.IsNullOrEmpty(a.specialAbility))
                 {
                     Plugin.Log.LogInfo("Test harness: granting ability '" + def.abilityId + "' to " + target + ".");
-                    a.statusEffects.GiveSpecialAbility(def.abilityId);
+                    AbilityPatches.EquipAbility(a, def.abilityId);
                 }
             }
             catch (Exception e)
