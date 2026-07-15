@@ -63,27 +63,52 @@ launch_win "$INST" \
   -- -screen-fullscreen 0 -window-mode windowed -screen-width 1280 -screen-height 720 -popupwindow \
   >/dev/null 2>&1
 
-printf "==> Waiting for in-game"
-ready=0
-for _ in $(seq 1 90); do
-  grep -aq 'state=in-game' "$B/LogOutput.log" 2>/dev/null && { ready=1; break; }
+grab() { ffmpeg -y -f x11grab -window_id "$1" -i "${DISPLAY:-:0}" -frames:v 1 "$2" >/dev/null 2>&1 || true; }
+
+# Find the window early so we can grab the character-select screen.
+WID=""
+for _ in $(seq 1 40); do
+  WID="$(wait_new_window 1 $known || true)"; [ -n "$WID" ] && break
+  WID="$(game_window_ids | head -1)"; [ -n "$WID" ] && break
+  sleep 1
+done
+[ -n "$WID" ] || WID="$(game_window_ids | head -1)"
+echo "==> Window id: $WID"
+
+# Phase 1: the character-select screen (shows the Wizard portrait). The driver
+# leaves it open for SOR_TEST_ACCEPT_DELAY seconds before accepting.
+sel_done=0
+printf "==> Waiting for character select"
+for _ in $(seq 1 60); do
+  if [ "$sel_done" = 0 ] && grep -aq 'char-select-open' "$B/LogOutput.log" 2>/dev/null; then
+    sleep 3; grab "$WID" "$SP/wizard-select-portrait.png"; echo " [grabbed select]"; sel_done=1
+  fi
+  grep -aq 'state=in-game' "$B/LogOutput.log" 2>/dev/null && break
   printf "."; sleep 2
 done
 echo
-[ "$ready" = 1 ] || { echo "did not reach in-game; see $B/LogOutput.log" >&2; exit 1; }
 
-WID="$(wait_new_window 20 $known || game_window_ids | head -1)"
-echo "==> Window id: $WID  — recording ${SECS}s to $SP/wizard-engine.mp4"
-RPID="$(start_x11_recording "$WID" "$SP/wizard-engine.mp4" 12)"
-
-# Grab stills through the run while the driver auto-casts Chaos Magic every 5s.
-for i in $(seq 1 $((SECS/6))); do
-  sleep 6
-  ffmpeg -y -f x11grab -window_id "$WID" -i "${DISPLAY:-:0}" -frames:v 1 "$SP/wizard-shot-$i.png" >/dev/null 2>&1 || true
+# Phase 2: wait until the Wizard is loaded on a real level WITH the ability
+# equipped (past the home base, where the ability can't be granted).
+printf "==> Waiting for Wizard + ability equipped"
+ready=0
+for _ in $(seq 1 90); do
+  grep -aqE 'agent=Wizard ability=CC_wizard_Ability' "$B/LogOutput.log" 2>/dev/null && { ready=1; break; }
+  printf "."; sleep 2
 done
+echo
+[ "$ready" = 1 ] || echo "WARN: never saw Wizard+ability; capturing anyway" >&2
+
+# Grab icon/body stills immediately (before self-buffs like Shrunk distort the body).
+sleep 1
+for i in 1 2 3; do grab "$WID" "$SP/wizard-ability-icon-$i.png"; sleep 1; done
+cp "$SP/wizard-ability-icon-1.png" "$SP/wizard-body-ingame.png" 2>/dev/null || true
+
+echo "==> Recording ${SECS}s of Chaos Magic to $SP/wizard-engine-fixed.mp4"
+RPID="$(start_x11_recording "$WID" "$SP/wizard-engine-fixed.mp4" 12)"
+for i in $(seq 1 $((SECS/6))); do sleep 6; grab "$WID" "$SP/wizard-shot-$i.png"; done
 stop_x11_recording "$RPID"
 
 echo "==> Done. Artifacts in $SP:"
-ls -la "$SP"/wizard-engine.mp4 "$SP"/wizard-shot-*.png 2>/dev/null
-echo "==> Driver report tail:"; tail -8 "$REPORT" 2>/dev/null
+ls -la "$SP"/wizard-engine-fixed.mp4 "$SP"/wizard-ability-icon-*.png "$SP"/wizard-select-portrait.png 2>/dev/null
 echo "==> To stop the game: (. \"$ENV_SH\" && kill_sor_one $INST)"

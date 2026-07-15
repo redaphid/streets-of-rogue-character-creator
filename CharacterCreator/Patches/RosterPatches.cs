@@ -210,17 +210,15 @@ namespace CharacterCreator
             CharacterDef def = CharacterRegistry.ByAgentName(agent.agentName);
             if (def == null) return;
 
-            // With custom body art we keep the character's own front sprite ("<Name>S")
-            // so the in-world front view is the real wizard, and only redirect the rest
-            // of the walk rig to the baseBody (the walk frames aren't custom-drawn).
-            bool custom = BodyArtPatches.HasCustomBody(def);
-            string keep = BodyArtPatches.PortraitKey(def);
+            // The in-world walk rig is SoR's shared 8-direction multi-part body; a single
+            // generated portrait can't drive it, so in-world the character wears the
+            // baseBody rig tinted to its colours (its distinct identity lives in the
+            // custom "<Name>S" character-select portrait, injected via BodyArtPatches).
             for (int i = 0; i < __instance.agentBodyStrings.Count; i++)
             {
                 string s = __instance.agentBodyStrings[i];
-                if (!s.StartsWith(def.name)) continue;
-                if (custom && s == keep) continue; // keep the custom "<Name>S"
-                __instance.agentBodyStrings[i] = def.baseBody + s.Substring(def.name.Length);
+                if (s.StartsWith(def.name))
+                    __instance.agentBodyStrings[i] = def.baseBody + s.Substring(def.name.Length);
             }
         }
     }
