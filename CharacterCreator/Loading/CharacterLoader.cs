@@ -94,6 +94,25 @@ namespace CharacterCreator
             return File.Exists(p) ? p : null;
         }
 
+        // Absolute path to the character's custom front/portrait body sprite
+        // (assets/body/<Name>S.png, the 44x36 "<Name>S" key), or null. When present,
+        // the character wears its OWN portrait through the tk2d Bodies path instead of
+        // aliasing an existing body.
+        public static string BodyPortraitPath(CharacterDef def)
+        {
+            if (def == null) return null;
+            string p = Path.Combine(def.dir, "assets", "body", def.name + "S.png");
+            return File.Exists(p) ? p : null;
+        }
+
+        // Absolute path to the greyscale tint-source portrait (G_<Name>S.png), or null.
+        public static string BodyGreyscalePath(CharacterDef def)
+        {
+            if (def == null) return null;
+            string p = Path.Combine(def.dir, "assets", "body", "G_" + def.name + "S.png");
+            return File.Exists(p) ? p : null;
+        }
+
         private static string Sanitize(string s)
         {
             var sb = new StringBuilder();

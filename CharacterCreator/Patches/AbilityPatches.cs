@@ -47,15 +47,17 @@ namespace CharacterCreator
             __instance.lowCountThreshold = 100;
         }
 
+        // Inject the ability icon through the proper tk2d SpriteScope.Items path
+        // (CustomSprite): it writes both the GameResources UI sprite the HUD button
+        // reads AND a real tk2dSpriteDefinition in the "Items" collection, so the
+        // special-ability indicator and any world/tk2d render resolve it too. The old
+        // WizardMod/CharacterCreator path wrote only the UI sprite - correct on the
+        // button but missing from tk2d, which is the injection mistake to avoid.
         private static void InjectSprite(CharacterDef def, GameResources gr)
         {
             if (gr == null) gr = GameController.gameController?.gameResources;
-            if (gr?.itemDic == null) return;
-            // The HashSet only skips re-reading the PNG; still verify the key is
-            // present, since SetupDics can rebuild the dictionaries.
-            if (spritesInjected.Contains(def.abilityId) && gr.itemDic.ContainsKey(def.abilityId)) return;
 
-            if (!gr.itemDic.ContainsKey(def.abilityId))
+            if (!spritesInjected.Contains(def.abilityId))
             {
                 string path = CharacterLoader.AbilityIconPath(def);
                 if (path != null)
@@ -63,23 +65,25 @@ namespace CharacterCreator
                     try
                     {
                         byte[] png = File.ReadAllBytes(path);
-                        Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-                        tex.LoadImage(png);
-                        tex.filterMode = FilterMode.Point;
-                        gr.itemDic[def.abilityId] = Sprite.Create(
-                            tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 64f);
+                        CustomSprite.Create(def.abilityId, SpriteScope.Items, png);
+                        spritesInjected.Add(def.abilityId);
                     }
                     catch (System.Exception e)
                     {
                         Plugin.Log.LogWarning("Failed to load ability icon for '" + def.name + "': " + e.Message);
                     }
                 }
-                // If there is still no sprite, alias an existing item so the HUD slot
-                // isn't blank (the game logs a missing-sprite error otherwise).
-                if (!gr.itemDic.ContainsKey(def.abilityId) && gr.itemDic.ContainsKey("MindControl"))
-                    gr.itemDic[def.abilityId] = gr.itemDic["MindControl"];
             }
-            spritesInjected.Add(def.abilityId);
+            else
+            {
+                // Retry any GameResources/tk2d writes that weren't ready earlier
+                // (e.g. SetupDics rebuilt the dictionaries after first injection).
+                CustomSprite.Redefine(def.abilityId);
+            }
+
+            // Last-resort so the slot is never blank if the PNG is missing entirely.
+            if (gr?.itemDic != null && !gr.itemDic.ContainsKey(def.abilityId) && gr.itemDic.ContainsKey("MindControl"))
+                gr.itemDic[def.abilityId] = gr.itemDic["MindControl"];
         }
 
         // ---- pressing the ability ------------------------------------------------
