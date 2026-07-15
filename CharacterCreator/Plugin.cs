@@ -54,6 +54,7 @@ namespace CharacterCreator
         public void Update()
         {
             TestHarness.Tick();
+            CustomSprite.FixCustomAgentSprites();
         }
     }
 }

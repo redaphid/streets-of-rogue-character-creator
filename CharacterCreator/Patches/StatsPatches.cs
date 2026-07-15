@@ -30,6 +30,25 @@ namespace CharacterCreator
             if (def.HasAbility)
                 AbilityPatches.EquipAbility(a, def.abilityId);
 
+            // A hat/headpiece the game draws on the head per-direction (a pointy hat
+            // reads as a wizard from every facing without a full custom body rig).
+            // Set defaultArmorHead DIRECTLY: the game's AddStartingHeadPiece only
+            // installs a non-permanent hat before the level finishes loading, so it's
+            // a no-op when we grant on an already-loaded level (the harness transform).
+            // AgentHitbox renders defaultArmorHead.invItemName + playerDir every frame.
+            if (!string.IsNullOrEmpty(def.headPiece))
+            {
+                try
+                {
+                    InvItem hat = new InvItem();
+                    hat.invItemName = def.headPiece;
+                    hat.SetupDetails(notNew: false);
+                    a.inventory.defaultArmorHead = hat;
+                    a.agentHitboxScript.MustRefresh();
+                }
+                catch (System.Exception e) { Plugin.Log.LogWarning("headPiece '" + def.headPiece + "' failed: " + e.Message); }
+            }
+
             if (def.startingItems != null)
                 foreach (StartItem item in def.startingItems)
                     if (item != null && !string.IsNullOrEmpty(item.name))

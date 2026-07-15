@@ -9,9 +9,10 @@ namespace CharacterCreator
     // character needs.
     public enum SpriteScope
     {
-        Items,   // ability/item icons  -> "Items" collection + gr.itemDic
-        Bodies,  // character body/portrait -> "Bodies" collection + gr.bodyDic
-        Agents,  // agent head/eyes      -> "Agents" collection + gr.head/eyesDic
+        Items,      // ability/item icons  -> "Items" collection + gr.itemDic
+        Bodies,     // character body/portrait -> "Bodies" collection + gr.bodyDic
+        Agents,     // agent head/eyes      -> "Agents" collection + gr.head/eyesDic
+        HeadPieces, // hats/helmets on the head -> "HeadPieces" collection + gr.headPiecesDic
     }
 
     // A standalone port of RogueLibs' RogueSprite tk2d injection (RogueLibsCore/
@@ -98,6 +99,48 @@ namespace CharacterCreator
             if (ByName.TryGetValue(name, out CustomSprite s)) s.Define();
         }
 
+        public static bool IsCustom(string spriteName) => spriteName != null && ByName.ContainsKey(spriteName);
+
+        // SoR draws every agent sprite layer with a SHARED atlas material (e.g.
+        // spawnerMain.headPiecesMaterial), which clobbers the per-definition material
+        // our injected sprite needs - so its UVs then sample the shared atlas and it
+        // renders as rainbow garbage. Re-point the renderer at the current sprite's own
+        // material whenever the layer is showing one of ours. Cheap and idempotent;
+        // call every frame for the affected layers.
+        public static void EnforceMaterial(tk2dBaseSprite layer)
+        {
+            if (layer == null) return;
+            tk2dSpriteDefinition def = layer.CurrentSprite;
+            if (def == null || !IsCustom(def.name)) return;
+            Renderer r = layer.GetComponent<Renderer>();
+            if (r != null && r.sharedMaterial != def.materialInst)
+                r.sharedMaterial = def.materialInst;
+        }
+
+        // Re-force our own materials on every custom-character agent's head-piece
+        // layers each frame (SoR keeps resetting them to the shared atlas material).
+        public static void FixCustomAgentSprites()
+        {
+            GameController gc = GameController.gameController;
+            if (gc == null || gc.agentList == null) return;
+            System.Collections.Generic.List<Agent> list = gc.agentList;
+            for (int i = 0; i < list.Count; i++)
+            {
+                Agent a = list[i];
+                if (a == null || a.agentHitboxScript == null) continue;
+                if (CharacterRegistry.ByAgentName(a.agentName) == null) continue;
+                AgentHitbox h = a.agentHitboxScript;
+                try
+                {
+                    EnforceMaterial(h.headPiece);
+                    EnforceMaterial(h.headPieceH);
+                    EnforceMaterial(h.headPieceWB);
+                    EnforceMaterial(h.headPieceWBH);
+                }
+                catch { }
+            }
+        }
+
         private static void Enqueue(CustomSprite s)
         {
             if (!Pending.TryGetValue(s.Scope, out List<CustomSprite> list))
@@ -124,6 +167,8 @@ namespace CharacterCreator
                 case SpriteScope.Agents:
                     gr.headDic[Name] = Sprite; gr.headList.Add(Sprite);
                     gr.eyesDic[Name] = Sprite; gr.eyesList.Add(Sprite); break;
+                case SpriteScope.HeadPieces:
+                    gr.headPiecesDic[Name] = Sprite; gr.headPiecesList.Add(Sprite); break;
             }
             grWritten = true;
         }
@@ -153,6 +198,7 @@ namespace CharacterCreator
                 case "Items": scope = SpriteScope.Items; break;
                 case "Bodies": scope = SpriteScope.Bodies; break;
                 case "Agents": scope = SpriteScope.Agents; break;
+                case "HeadPieces": scope = SpriteScope.HeadPieces; break;
                 default: return;
             }
             Collections[scope] = data;
@@ -217,26 +263,41 @@ namespace CharacterCreator
 
         private static void AddDefinition(tk2dSpriteCollectionData coll, tk2dSpriteDefinition def)
         {
-            var newDefs = new tk2dSpriteDefinition[coll.spriteDefinitions.Length + 1];
-            Array.Copy(coll.spriteDefinitions, newDefs, coll.spriteDefinitions.Length);
+            // A tk2d sprite looks a name up on its `collection` but a tk2dSprite RENDERS
+            // from `collection.inst` (platform-specific data). When those differ (the
+            // collection has platform data) the name resolves to an index in the outer
+            // array while the renderer reads the SAME index from inst's array - a
+            // different definition - which draws the wrong material/UVs as rainbow
+            // garbage. Appending to BOTH (they start equal length, so the new def lands
+            // at the same index in each) keeps lookup and render agreeing.
+            tk2dSpriteCollectionData instc = coll.inst;
+            bool split = !ReferenceEquals(instc, coll);
+            AppendTo(coll, def);
+            if (split) AppendTo(instc, def);
+        }
+
+        private static void AppendTo(tk2dSpriteCollectionData c, tk2dSpriteDefinition def)
+        {
+            var newDefs = new tk2dSpriteDefinition[c.spriteDefinitions.Length + 1];
+            Array.Copy(c.spriteDefinitions, newDefs, c.spriteDefinitions.Length);
             newDefs[newDefs.Length - 1] = def;
-            coll.spriteDefinitions = newDefs;
+            c.spriteDefinitions = newDefs;
 
-            var newMats = new Material[coll.materials.Length + 1];
-            Array.Copy(coll.materials, newMats, coll.materials.Length);
+            var newMats = new Material[c.materials.Length + 1];
+            Array.Copy(c.materials, newMats, c.materials.Length);
             newMats[newMats.Length - 1] = def.material;
-            coll.materials = newMats;
+            c.materials = newMats;
 
-            var newTex = new Texture[coll.textures.Length + 1];
-            Array.Copy(coll.textures, newTex, coll.textures.Length);
+            var newTex = new Texture[c.textures.Length + 1];
+            Array.Copy(c.textures, newTex, c.textures.Length);
             newTex[newTex.Length - 1] = def.material.mainTexture;
-            coll.textures = newTex;
+            c.textures = newTex;
 
             // Without these four the new name is never found by GetSpriteIdByName.
-            coll.inst.materialIdsValid = false;
-            coll.InitMaterialIds();
-            coll.ClearDictionary();
-            coll.InitDictionary();
+            c.materialIdsValid = false;
+            c.InitMaterialIds();
+            c.ClearDictionary();
+            c.InitDictionary();
         }
     }
 }

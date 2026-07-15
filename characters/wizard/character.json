@@ -4,7 +4,9 @@
   "description": "A frail scholar of the arcane. Their Chaos Magic casts a different random spell every time - fire, frost, lightning, shrinking, blinking... even the wizard doesn't know what comes out next.",
   "baseBody": "Vampire",
   "slot": "auto",
+  "headPiece": "WizardHat",
   "legsColor": [94, 0, 148],
+  "bodyColor": [72, 24, 120],
   "stats": {
     "strength": 1,
     "endurance": 1,
