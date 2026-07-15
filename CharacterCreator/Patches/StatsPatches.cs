@@ -28,7 +28,7 @@ namespace CharacterCreator
             a.modVigilant = s.vigilant;
 
             if (def.HasAbility)
-                a.statusEffects.GiveSpecialAbility(def.abilityId);
+                AbilityPatches.EquipAbility(a, def.abilityId);
 
             if (def.startingItems != null)
                 foreach (StartItem item in def.startingItems)

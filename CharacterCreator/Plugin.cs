@@ -43,8 +43,17 @@ namespace CharacterCreator
             harmony.PatchAll(typeof(StatsPatches));
             harmony.PatchAll(typeof(AbilityPatches));
             harmony.PatchAll(typeof(BigQuestPatches));
+            harmony.PatchAll(typeof(SpritePatches));
+            harmony.PatchAll(typeof(BodyArtPatches));
+
+            TestHarness.Init();
 
             Log.LogInfo("Character Creator loaded: injected " + CharacterRegistry.All.Count + " character(s).");
+        }
+
+        public void Update()
+        {
+            TestHarness.Tick();
         }
     }
 }

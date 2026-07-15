@@ -93,6 +93,9 @@ namespace CharacterCreator
             if (gr == null) return;
             foreach (CharacterDef def in CharacterRegistry.All)
             {
+                // A character with its own body art injects its real "<Name>S" sprite
+                // (BodyArtPatches); don't overwrite it with the baseBody alias.
+                if (BodyArtPatches.HasCustomBody(def)) continue;
                 string src = def.baseBody + "S";
                 string dst = def.name + "S";
                 if (gr.bodyDic != null && gr.bodyDic.ContainsKey(src) && !gr.bodyDic.ContainsKey(dst))
@@ -114,6 +117,9 @@ namespace CharacterCreator
         {
             CharacterDef def = CharacterRegistry.ByAgentName(mySlotAgentType);
             if (def == null) return;
+            // Custom body art already carries its own colours; a portrait tint would
+            // recolour it (e.g. wash the wizard purple), so leave it untinted.
+            if (BodyArtPatches.HasCustomBody(def)) return;
             int[] rgb = (def.bodyColor != null && def.bodyColor.Length >= 3) ? def.bodyColor
                       : (def.legsColor != null && def.legsColor.Length >= 3) ? def.legsColor
                       : null;
@@ -204,6 +210,10 @@ namespace CharacterCreator
             CharacterDef def = CharacterRegistry.ByAgentName(agent.agentName);
             if (def == null) return;
 
+            // The in-world walk rig is SoR's shared 8-direction multi-part body; a single
+            // generated portrait can't drive it, so in-world the character wears the
+            // baseBody rig tinted to its colours (its distinct identity lives in the
+            // custom "<Name>S" character-select portrait, injected via BodyArtPatches).
             for (int i = 0; i < __instance.agentBodyStrings.Count; i++)
             {
                 string s = __instance.agentBodyStrings[i];

@@ -1,0 +1,18 @@
+{
+  "format": {"portrait_key": "WizardS", "grayscale_key": "G_WizardS", "size": [44,36], "alpha": true},
+  "assets": [
+    {"file": "WizardS.png", "role": "character portrait / base body (bodyDic)", "size": [44,36]},
+    {"file": "G_WizardS.png", "role": "grayscale tint source (bodyGDic)", "size": [44,36]}
+  ],
+  "generation": {
+    "tool": "ComfyUI HTTP API (generate.py)",
+    "checkpoint": "dreamshaper_8.safetensors",
+    "lora": "pixel_art_style_by_skormino_v7.05_test_72img.safetensors@1.0",
+    "mode": "txt2img", "seed": 3303, "denoise": 1.0, "steps": 28, "cfg": 7.0,
+    "sampler": "dpmpp_2m/karras", "render_size": 512,
+    "ipadapter": {"preset": "STANDARD (medium strength)", "weight": 0.8, "weight_type": "style transfer",
+                  "refs": ["vanilla VampireS", "vanilla CopS", "vanilla DoctorS"]},
+    "post": "isnet rembg -> autocrop -> scale to 20x30 -> center bottom in 44x36 -> quantize 14 colors"
+  },
+  "note": "Extracted vanilla SoR sprites used as IPAdapter references only; never redistributed."
+}
